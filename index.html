@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="選択肢を入力して、ランダムにひとつ選ぶシンプルなアプリです。">
+    <title>ランダム選択</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <p class="eyebrow">RANDOM PICKER</p>
+        <h1>迷ったら、ランダムに。</h1>
+        <p class="description">選択肢を入れて、ひとつ選んでみましょう。</p>
+      </header>
+
+      <form id="picker-form" class="panel">
+        <div class="section-heading">
+          <h2>選択肢</h2>
+          <span>空欄は抽選されません</span>
+        </div>
+        <div id="options" class="options"></div>
+        <button id="add-option" class="add-button" type="button">＋ 選択肢を追加</button>
+        <button id="pick-button" class="pick-button" type="submit">ランダムで選ぶ <span aria-hidden="true">→</span></button>
+        <p id="error-message" class="error" role="alert" hidden></p>
+      </form>
+
+      <section id="result" class="result" aria-labelledby="result-heading" aria-live="polite" aria-atomic="true">
+        <h2 id="result-heading">今回選ばれたのは……</h2>
+        <p id="result-value" class="result-value placeholder">ここに結果が表示されます</p>
+      </section>
+      <p class="footnote">入力した内容は、このブラウザの中だけで使用します。</p>
+    </main>
+  </body>
+</html>

@@ -6,7 +6,35 @@ const addButton = document.getElementById("add-option");
 const errorMessage = document.getElementById("error-message");
 const result = document.getElementById("result");
 const resultValue = document.getElementById("result-value");
+const storageMessage = document.getElementById("storage-message");
+const storageKey = "random-picker.options.v1";
 let nextInputId = 0;
+
+function saveOptions() {
+  try {
+    const values = Array.from(options.querySelectorAll("input"), (input) => input.value);
+    localStorage.setItem(storageKey, JSON.stringify(values));
+    storageMessage.textContent = "選択肢はこのブラウザに自動保存されます。";
+  } catch {
+    // 保存が拒否されても、入力や抽選はそのまま使える。
+    storageMessage.textContent = "選択肢を保存できません。この画面での入力・抽選は利用できます。";
+  }
+}
+
+function restoreOptions() {
+  try {
+    const saved = localStorage.getItem(storageKey);
+    if (saved === null) return null;
+    const values = JSON.parse(saved);
+    if (!Array.isArray(values) || !values.every((value) => typeof value === "string")) {
+      throw new Error("Invalid saved options");
+    }
+    return values;
+  } catch {
+    storageMessage.textContent = "保存した選択肢を読み込めませんでした。選択肢を入力してご利用ください。";
+    return null;
+  }
+}
 
 // A … Z, AA, AB … と、26件を超えてもラベルを付けられる。
 function optionLabel(index) {
@@ -25,7 +53,7 @@ function updateLabels() {
   });
 }
 
-function addOption(focus = false) {
+function addOption(focus = false, value = "") {
   const row = document.createElement("div");
   row.className = "option-row";
 
@@ -33,6 +61,7 @@ function addOption(focus = false) {
   input.type = "text";
   input.id = `option-${nextInputId++}`;
   input.className = "option-input";
+  input.value = value;
   input.placeholder = ["例：ラーメン", "例：カレー", "例：寿司"][options.children.length] || "選択肢を入力";
 
   const label = document.createElement("label");
@@ -47,6 +76,7 @@ function addOption(focus = false) {
     const nextFocus = row.nextElementSibling || row.previousElementSibling;
     row.remove();
     updateLabels();
+    saveOptions();
     if (nextFocus) nextFocus.querySelector("input").focus();
     else addButton.focus();
   });
@@ -78,6 +108,7 @@ function randomIndex(count) {
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
+  saveOptions();
   const candidates = Array.from(options.querySelectorAll("input"))
     .map((input) => input.value.trim())
     .filter((value) => value.length > 0);
@@ -105,5 +136,11 @@ form.addEventListener("submit", (event) => {
   }
 });
 
-addButton.addEventListener("click", () => addOption(true));
-for (let i = 0; i < 3; i += 1) addOption();
+options.addEventListener("input", saveOptions);
+addButton.addEventListener("click", () => {
+  addOption(true);
+  saveOptions();
+});
+
+const initialOptions = restoreOptions() ?? ["", "", ""];
+initialOptions.forEach((value) => addOption(false, value));

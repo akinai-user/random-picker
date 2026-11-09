@@ -9,12 +9,19 @@ const resultValue = document.getElementById("result-value");
 const storageMessage = document.getElementById("storage-message");
 const storageKey = "random-picker.options.v1";
 let nextInputId = 0;
+let lastStoredValues = null;
 
 function saveOptions() {
   try {
     const values = Array.from(options.querySelectorAll("input"), (input) => input.value);
-    localStorage.setItem(storageKey, JSON.stringify(values));
-    storageMessage.textContent = "選択肢はこのブラウザに自動保存されます。";
+    const serialized = JSON.stringify(values);
+    if (serialized === lastStoredValues) return;
+    localStorage.setItem(storageKey, serialized);
+    if (localStorage.getItem(storageKey) !== serialized) {
+      throw new Error("Options were not saved");
+    }
+    lastStoredValues = serialized;
+    storageMessage.textContent = "選択肢をこのブラウザに保存済みです。";
   } catch {
     // 保存が拒否されても、入力や抽選はそのまま使える。
     storageMessage.textContent = "選択肢を保存できません。この画面での入力・抽選は利用できます。";
@@ -29,6 +36,8 @@ function restoreOptions() {
     if (!Array.isArray(values) || !values.every((value) => typeof value === "string")) {
       throw new Error("Invalid saved options");
     }
+    lastStoredValues = JSON.stringify(values);
+    storageMessage.textContent = "保存済みの選択肢を復元しました。変更は自動保存されます。";
     return values;
   } catch {
     storageMessage.textContent = "保存した選択肢を読み込めませんでした。選択肢を入力してご利用ください。";
@@ -137,6 +146,13 @@ form.addEventListener("submit", (event) => {
 });
 
 options.addEventListener("input", saveOptions);
+options.addEventListener("change", saveOptions);
+options.addEventListener("compositionend", saveOptions);
+// 自動入力などでinputイベントが発生しない場合も、離れる直前に保存する。
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") saveOptions();
+});
+window.addEventListener("pagehide", saveOptions);
 addButton.addEventListener("click", () => {
   addOption(true);
   saveOptions();
